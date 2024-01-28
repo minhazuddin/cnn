@@ -1,0 +1,92 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import tensorflow as tf
+
+tf.__version__
+
+mnist = tf.keras.datasets.mnist
+
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+X_train.shape, X_test.shape
+
+y_train.shape, y_test.shape
+
+plt.imshow(X_train[0], cmap='binary')
+
+X_train[0].max()
+
+X_train[0].min()
+
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+
+X_train = X_train / 255
+X_test = X_test / 255
+
+X_train.max()
+
+plt.imshow(X_train[0], cmap='binary')
+
+from tensorflow.keras.utils import to_categorical
+
+y_cat_train = to_categorical(y_train)
+y_cat_test = to_categorical(y_test) 
+
+y_cat_train[0]
+
+X_train = X_train.reshape(-1, 28, 28, 1)
+X_test = X_test.reshape(-1, 28, 28, 1)
+
+X_train.shape
+
+
+
+model = tf.keras.Sequential([tf.keras.layers.Conv2D(filters=32, kernel_size=(4,4), input_shape = (28,28,1), activation='relu'),   
+                            tf.keras.layers.MaxPool2D(pool_size=(2,2)),
+                            tf.keras.layers.Flatten(),
+                            tf.keras.layers.Dense(128, activation='relu'),
+                            tf.keras.layers.Dense(10, activation='softmax')
+                            ])
+
+    
+
+model.compile(optimizer='adam', loss=['categorical_crossentropy'], metrics=['accuracy'])
+
+from tensorflow.keras.callbacks import EarlyStopping
+
+early_stop = EarlyStopping(monitor='val_loss', patience=2)
+
+model.fit(X_train, y_cat_train, epochs=10, validation_data = (X_test, y_cat_test), callbacks=[early_stop])
+
+
+
+losses = pd.DataFrame(model.history.history)
+
+losses
+
+model.evaluate(X_test, y_cat_test)
+
+model.metrics_names
+
+model_prediction = model.predict(X_test)
+model_prediction = np.argmax(model_prediction, axis=1)
+
+from sklearn.metrics import classification_report, confusion_matrix
+
+print(classification_report(y_test, model_prediction))
+
+plt.figure(figsize=(10,6))
+sns.heatmap(confusion_matrix(y_test, model_prediction), annot=True)
+
+new_number = X_test[0]
+
+plt.imshow(new_number, cmap='binary')
+
+new_number.shape
+
+model.predict(new_number.reshape(-1, 28, 28, 1), verbose=0).argmax()
+
